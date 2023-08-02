@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
-const wavefile = require('wavefile');
+const wavefile_1 = __importDefault(require("wavefile"));
 const SAMPLING_FREQUENCY = 44100;
 const freq_ratio_sqrt = [
     3.011237462,
@@ -52,7 +52,7 @@ function gen_timbre_samples(o) {
     return samples.map(s => Math.round(s * coefficient));
 }
 function gen_sound(o) {
-    let wav = new wavefile.WaveFile();
+    let wav = new wavefile_1.default.WaveFile();
     wav.fromScratch(1, 44100, '32', o.samples);
     fs_1.default.writeFileSync(o.outPath, wav.toBuffer());
 }
