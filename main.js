@@ -36,7 +36,6 @@ console.log(freq_ratio); /* [
 function gen_samples(o) {
     const fundamental_frequency = o.fundamentalFrequency;
     const frequencies = (base_freq) => freq_ratio.map(x => base_freq * x).filter(fr => fr <= SAMPLING_FREQUENCY / 2);
-    console.log(frequencies(fundamental_frequency));
     const sample_length_in_second = o.lengthInSecond;
     const samples = Array.from({ length: Math.ceil(sample_length_in_second * SAMPLING_FREQUENCY) }, (_, i) => {
         const second = i / SAMPLING_FREQUENCY;
@@ -46,8 +45,8 @@ function gen_samples(o) {
             .reduce((acc, current) => acc + current, 0);
     });
 
-    const max = Math.max(...samples);
-    const min = Math.min(...samples);
+    const max = samples.reduce((a, b) => Math.max(a, b));
+    const min = samples.reduce((a, b) => Math.min(a, b));
     // こいつらが Math.pow(2, 28) から -Math.pow(2, 28) の間に収まるぐらいの係数を掛け算して出力
     const max_amplitude = Math.max(Math.abs(max), Math.abs(min));
     const coefficient = Math.pow(2, 28) / max_amplitude;
@@ -65,4 +64,39 @@ const PERIOD = freq_ratio[1]; // 2.756538507456572
 const SEMITONE_RATIO = Math.pow(PERIOD, 1 / 18); // 1.0579488485113508
 console.log(SEMITONE_RATIO);
 
-gen_sound({ outPath: "sawtooth_equivalent.wav", samples: gen_samples({ fundamentalFrequency: PITCH_STANDARD, lengthInSecond: 1, powerSpectrum: k => 1 / k }) });
+// gen_sound({ outPath: "sawtooth_equivalent.wav", samples: gen_samples({ fundamentalFrequency: PITCH_STANDARD, lengthInSecond: 1, powerSpectrum: k => 1 / k }) });
+
+let chromatic_scale_samples = [];
+for (let i = 0; i <= 18; i++) {
+    chromatic_scale_samples = [
+        ...chromatic_scale_samples,
+        ...gen_samples({
+            fundamentalFrequency: PITCH_STANDARD * Math.pow(SEMITONE_RATIO, i),
+            lengthInSecond: 0.5,
+            powerSpectrum: k => 1 / k
+        })
+    ];
+}
+
+// gen_sound({ outPath: "chromatic_scale.wav", samples: chromatic_scale_samples });
+
+function genChord(semitones, outPath) {
+    const root = gen_samples({
+        fundamentalFrequency: PITCH_STANDARD,
+        lengthInSecond: 3,
+        powerSpectrum: k => 1 / k
+    });
+    const chord_tone = gen_samples({
+        fundamentalFrequency: PITCH_STANDARD * Math.pow(SEMITONE_RATIO, semitones),
+        lengthInSecond: 3,
+        powerSpectrum: k => 1 / k
+    });
+
+    gen_sound({ outPath, samples: root.map((v, i) => v + chord_tone[i]) });
+}
+
+// genChord(18, "chord_18_semitones.wav");
+// genChord(12, "chord_12_semitones.wav");
+// genChord(9, "chord_9_semitones.wav");
+// genChord(7, "chord_7_semitones.wav");
+genChord(6, "chord_6_semitones.wav");
