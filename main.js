@@ -104,6 +104,7 @@ function genChord(semitones_arr, outPath) {
 // genChord(12, "chord_12_semitones.wav");
 // genChord(9, "chord_9_semitones.wav");
 // genChord(7, "chord_7_semitones.wav");
-genChord([0, 6, 9], "chord_6_9_semitones.wav");
+// genChord([0, 6, 9], "chord_6_9_semitones.wav");
+genChord([0, 3, 6], "chord_3_6_semitones.wav");
 
 // major らしきもの 0, 6, 9
