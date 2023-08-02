@@ -33,11 +33,11 @@ console.log(freq_ratio); /* [
     58.33989761227811
   ] */
 
-function gen_sound(o) {
+function gen_samples(o) {
     const fundamental_frequency = o.fundamentalFrequency;
     const frequencies = (base_freq) => freq_ratio.map(x => base_freq * x).filter(fr => fr <= SAMPLING_FREQUENCY / 2);
     console.log(frequencies(fundamental_frequency));
-    const sample_length_in_second = 1;
+    const sample_length_in_second = o.lengthInSecond;
     const samples = Array.from({ length: Math.ceil(sample_length_in_second * SAMPLING_FREQUENCY) }, (_, i) => {
         const second = i / SAMPLING_FREQUENCY;
         // 基本周波数の k 倍の音は振幅が powerSpectrum(k) 倍になる
@@ -51,10 +51,18 @@ function gen_sound(o) {
     // こいつらが Math.pow(2, 28) から -Math.pow(2, 28) の間に収まるぐらいの係数を掛け算して出力
     const max_amplitude = Math.max(Math.abs(max), Math.abs(min));
     const coefficient = Math.pow(2, 28) / max_amplitude;
+    return samples.map(s => Math.round(s * coefficient));
+}
 
+function gen_sound(o) {
     let wav = new wavefile.WaveFile();
-    wav.fromScratch(1, 44100, '32', samples.map(s => Math.round(s * coefficient)));
+    wav.fromScratch(1, 44100, '32', o.samples);
     fs.writeFileSync(o.outPath, wav.toBuffer());
 }
 
-gen_sound({ fundamentalFrequency: 443.0959607292108, outPath: "sawtooth_equivalent.wav", powerSpectrum: k => 1 / k });
+const PITCH_STANDARD = 443.0959607292108;
+const PERIOD = freq_ratio[1]; // 2.756538507456572
+const SEMITONE_RATIO = Math.pow(PERIOD, 1 / 18); // 1.0579488485113508
+console.log(SEMITONE_RATIO);
+
+gen_sound({ outPath: "sawtooth_equivalent.wav", samples: gen_samples({ fundamentalFrequency: PITCH_STANDARD, lengthInSecond: 1, powerSpectrum: k => 1 / k }) });
