@@ -96,8 +96,13 @@ function genChord(semitones_arr, outPath) {
         lengthInSecond: 3,
         powerSpectrum: k => 1 / k
     });
+    const chord_tone3 = gen_samples({
+        fundamentalFrequency: PITCH_STANDARD * Math.pow(SEMITONE_RATIO, semitones_arr[3]),
+        lengthInSecond: 3,
+        powerSpectrum: k => 1 / k
+    });
 
-    gen_sound({ outPath, samples: root.map((v, i) => v + chord_tone[i] + chord_tone2[i]) });
+    gen_sound({ outPath, samples: root.map((v, i) => v + chord_tone[i] + chord_tone2[i] + chord_tone3[i]) });
 }
 
 // genChord(18, "chord_18_semitones.wav");
@@ -105,6 +110,6 @@ function genChord(semitones_arr, outPath) {
 // genChord(9, "chord_9_semitones.wav");
 // genChord(7, "chord_7_semitones.wav");
 // genChord([0, 6, 9], "chord_6_9_semitones.wav");
-genChord([0, 3, 6], "chord_3_6_semitones.wav");
+genChord([0, 3, 6, 18], "chord_3_6_18_semitones.wav");
 
 // major らしきもの 0, 6, 9
