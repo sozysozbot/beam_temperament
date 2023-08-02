@@ -33,26 +33,28 @@ console.log(freq_ratio); /* [
     58.33989761227811
   ] */
 
-const fundamental_frequency = 443.0959607292108;
-const frequencies = (base_freq) => freq_ratio.map(x => base_freq * x).filter(fr => fr <= SAMPLING_FREQUENCY / 2);
-console.log(frequencies(fundamental_frequency));
-const sample_length_in_second = 1;
-const samples = Array.from({ length: Math.ceil(sample_length_in_second * SAMPLING_FREQUENCY) }, (_, i) => {
-    const second = i / SAMPLING_FREQUENCY;
-    // ノコギリ波相当が欲しいので、基本周波数の k 倍の音は振幅を 1/k に削る
-    return frequencies(fundamental_frequency)
-        .map((freq, i) => Math.sin(second * freq * 2 * Math.PI) / freq_ratio[i])
-        .reduce((acc, current) => acc + current, 0);
-});
+function gen_sound(o) {
+    const fundamental_frequency = o.fundamentalFrequency;
+    const frequencies = (base_freq) => freq_ratio.map(x => base_freq * x).filter(fr => fr <= SAMPLING_FREQUENCY / 2);
+    console.log(frequencies(fundamental_frequency));
+    const sample_length_in_second = 1;
+    const samples = Array.from({ length: Math.ceil(sample_length_in_second * SAMPLING_FREQUENCY) }, (_, i) => {
+        const second = i / SAMPLING_FREQUENCY;
+        // 基本周波数の k 倍の音は振幅が powerSpectrum(k) 倍になる
+        return frequencies(fundamental_frequency)
+            .map((freq, i) => Math.sin(second * freq * 2 * Math.PI) * o.powerSpectrum(freq_ratio[i]))
+            .reduce((acc, current) => acc + current, 0);
+    });
 
-const max = Math.max(...samples);
-const min = Math.min(...samples);
-// こいつらが Math.pow(2, 28) から -Math.pow(2, 28) の間に収まるぐらいの係数を掛け算して出力
-const max_amplitude = Math.max(Math.abs(max), Math.abs(min));
-const coefficient = Math.pow(2, 28) / max_amplitude;
+    const max = Math.max(...samples);
+    const min = Math.min(...samples);
+    // こいつらが Math.pow(2, 28) から -Math.pow(2, 28) の間に収まるぐらいの係数を掛け算して出力
+    const max_amplitude = Math.max(Math.abs(max), Math.abs(min));
+    const coefficient = Math.pow(2, 28) / max_amplitude;
 
+    let wav = new wavefile.WaveFile();
+    wav.fromScratch(1, 44100, '32', samples.map(s => Math.round(s * coefficient)));
+    fs.writeFileSync(o.outPath, wav.toBuffer());
+}
 
-let sawtooth_equivalent = new wavefile.WaveFile();
-sawtooth_equivalent.fromScratch(1, 44100, '32', samples.map(s => Math.round(s * coefficient)));
-fs.writeFileSync("sawtooth_equivalent.wav", sawtooth_equivalent.toBuffer());
-
+gen_sound({ fundamentalFrequency: 443.0959607292108, outPath: "sawtooth_equivalent.wav", powerSpectrum: k => 1 / k });
